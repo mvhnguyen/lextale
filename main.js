@@ -54,9 +54,7 @@ function complete_language(summary) {
     } else {
         finished = true;
         full_data = makeCsv();
-        document.getElementById('end_summary_id').textContent = phaseSummaries.join(' | ');
         document.getElementById('end_filename').textContent = get_filename();
-        document.getElementById('full_data_disp').textContent = full_data;
         showOnly('div_feed');
         // A browser may block automatic downloads. A visible Save button is always provided.
         dl_as_file(get_filename(), full_data);
@@ -74,24 +72,7 @@ let path_imgs = './ch_items/';
 document.addEventListener("DOMContentLoaded", function() {
     preload_single('LEXTALE_CH_instructions.png', 'intro_ch');
     basic_times.page_loaded = Date.now();
-    document.getElementById('finished_id').addEventListener("touchstart", touchstart, false);
-    document.getElementById('finished_id').addEventListener("touchend", touchend, false);
 });
-
-let timer;
-
-function touchstart(e) {
-    e.preventDefault();
-    if (!timer) {
-        timer = setTimeout(show_feed, 900);
-    }
-}
-
-function touchend() {
-    if (timer) {
-        clearTimeout(timer);
-    }
-}
 
 function lex_next() {
     window.lexstim_item = lextale_items.shift();
@@ -158,12 +139,6 @@ function ch_ending() {
     });
     const score = (corr_ch / 60 * 100 + corr_nonch / 30 * 100) / 2;
     complete_language('Mandarin: ' + score.toFixed(2) + '% (characters ' + corr_ch + '/60, pseudocharacters ' + corr_nonch + '/30)');
-}
-
-function show_feed() {
-    document.getElementById('div_end').style.display = 'none';
-    document.getElementById('div_feed').style.display = 'block';
-    document.getElementById('full_data_disp').innerHTML = full_data;
 }
 
 function images_loaded() {

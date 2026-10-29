@@ -1,59 +1,87 @@
-### LexTALE(_CH)
+# LexTALE — English and Mandarin (bilingual administration)
 
-Web-based (HTML/JavaScript) and PsychoPy (Python) implementations of the original *LexTALE* (English, German, Dutch; Lemhöfer & Broersma, 2012) and *LexTALE_CH* (Mandarin Chinese; Chan & Chang, 2018).
+This repository is an adaptation of the open-source [LexTALE(_CH) web implementation by Gaspar Lukács](https://github.com/gasparl/lextale). It is configured for administering **both English LexTALE and Mandarin Chinese LexTALE_CH to the same participant** in one browser-based session, including on an iPad.
 
-The original three languages are also freely available at the official website (http://www.lextale.com/), but the present implementation has some advantages:
-- It's open source and thereby easy to modify for any specific uses online and offline (see below).
-- It does not automatically display the end results (so participants won't know it unless the experimenter allows it).
-- It records each response including response times. (And also records full test duration.)
+The adaptation retains the original English and Chinese stimulus definitions, Chinese character images, and task formats. It removes the participant-facing language selection and uses participant ID parity to determine test order. The German and Dutch tests and the Chinese version with additional English instructions are not part of this administration workflow.
 
-As for *LexTALE_CH*, to my knowledge this is the first computerized implementation available for use.
+## Session procedure
 
+1. Open this repository's GitHub Pages website in a browser.
+2. Enter a **numeric participant ID** (e.g., `001` or `002`) and the **experimenter name**.
+3. Select **Begin session**. The language order is assigned automatically:
 
-### HOW TO USE
+   | Participant ID | First test | Second test |
+   | --- | --- | --- |
+   | Even (e.g., `002`) | English | Mandarin |
+   | Odd (e.g., `001`) | Mandarin | English |
 
-The simplest way to use this application is via the "GitHub Pages" website of this repository itself: https://gasparl.github.io/lextale/. Just open it in a modern browser (practically anything except Internet Explorer), select the language and click START to begin the test.
+4. Read the instructions and complete the first test.
+5. Use the transition screen to continue to the second test. Participants complete **both** tests in the assigned order.
+6. At the end, save the combined CSV and **confirm that the file is present on the device** before closing the page.
 
-#### Results
+The Mandarin test uses **Chinese-only instructions** (`ch1` in the original implementation). Both task formats are preserved:
 
-At the end of the test a simple text "The test is completed." is displayed. Results are not displayed automatically so that the tested persons would not see them if they are not supposed to. The summary as well as detailed (trial level) results can be accessed by simply double-clicking on this "The test is completed." text. (They are also written to the browser [Console](https://webmasters.stackexchange.com/questions/8525/how-do-i-open-the-javascript-console-in-different-browsers); and the detailed trial level data stored in the `full_data` variable also accessible via the Console.) On smartphones, long press can be used instead of double click – but generally this application is not optimized for mobile phones.
+- **English LexTALE:** 63 displayed items (3 unscored introductory/dummy items plus 40 real words and 20 nonwords), judged individually as word/nonword. Response time is recorded per item.
+- **Mandarin LexTALE_CH:** 90 character images (60 real characters, 30 pseudocharacters), presented as a scrollable checklist. Participants select the images they judge to be real Chinese characters. Item-level response times are **not** collected for this version.
 
-#### Download or Clone
+The two tests retain their original category-balanced percentage scoring: the mean of accuracy on real and nonreal items. English dummy items are excluded from the English score.
 
-The application can of course also be downloaded or forked/cloned via Git. E.g. simply use the green "Clone or download" button on this page chosing *Download ZIP*. After downloading, extract the *zip* file into a single folder. Open the *index.html* file in a browser, and it will work just as well as the online version, but with no need for active internet connection.
+## Output and data handling
 
-This way the code can also be modified for specific purposes. For example, you can add instructions in the participants' native language: just open the *html* file in any text editor and add your text next to (or in place of) the original instructions. As long as the tags and similar special characters are intact, the test will work just the same.
+After both tests, the program requests a CSV download and displays a **Save CSV again** button in case the browser blocks or does not complete that download. **No scores, accuracy summaries, or trial-level results are displayed to the participant.** The completion screen only shows the CSV filename and save instructions.
 
-Another simple modification you can do is to remove start page selection options and select another default language to be tested. For this, in the *html* file (around the beginning), remove all the option labels between `LexTALE: select language to be tested` and `START`. In the *main.js* change the language code value `'en'` in the initial line `let lexlang = 'en';` to the desired language, e.g. `let lexlang = 'nl';` for Dutch (see all options listed in a comment in the same line in the file).
+The filename is `lextale_<participant_id>.csv`, preserving the entered ID. For example, participant `002` produces `lextale_002.csv`.
 
-If the modified version of the application is uploaded (forked/pushed/cloned) into a new GitHub repository, a webpage for the application may also be easily created using GitHub Pages (available under repository Settings).
+A complete session produces **153 item-level rows**: 63 English items (including the 3 dummy items) and 90 Mandarin items. Its CSV columns are:
 
-#### Online studies
+| Column | Meaning |
+| --- | --- |
+| `participant_id` | ID entered at the beginning |
+| `experimenter` | Experimenter name entered at the beginning |
+| `language` | `English` or `Mandarin` |
+| `order_position` | `1` for first test, `2` for second test |
+| `item_number` | Item number within that language |
+| `stimulus` | English word/nonword or Mandarin image filename |
+| `is_real` | `1` for real item, `0` for nonreal item |
+| `dummy` | `1` for English unscored introductory items, otherwise `0` |
+| `response` | `yes` / `no`; for Mandarin, selected / not selected |
+| `correct` | `yes` / `no` |
+| `response_time_ms` | English response time in milliseconds; blank for Mandarin |
 
-The present application is intended for in-lab use (i.e., where the participants come to you and complete the test on a computer on which you afterwards save the data). However, it can also be used online. For such a case, you need a server that supports some server-side code like PHP via which to save the data. GitHub for instance gives no such option, but universities typically have some free webspace with PHP support. As for the code, an example solution is given in the JavaScript function `store_via_php()` (in *main.js*) that uses the *store.php* file, storing the results as a single file; disabled (commented out) by default. To enable it, just add (or uncomment) it to the desired place in the JavaScript code. Crucially, this is not a full solution (I added this basic template only because of repeated requests, but I never used it): you would need to modify it to save each participant's data in a different file (e.g., give them a subject ID, and add it to the file name) or, if they are to be saved in the same file, a subject ID column in the data or such.
+**Important:** GitHub Pages is a static host. It does **not** automatically upload participant responses to GitHub or a server. Results are generated in the browser and must be saved on the device. In Safari on iPad, confirm the file was actually saved and can be found through Files/Downloads or the browser's download interface. Reusing an ID may create multiple downloads with similar names, depending on browser behavior.
 
-#### PsychoPy
+## Hosting with GitHub Pages
 
-To embed the LexTale into a [PsychoPy](https://www.psychopy.org/) task (which was my reason) or for extreme timing precision (which is hardly necessary), you can use the *.py* files. For this, you'll need [*PsychoPy 2* (ideal version: StandalonePsychoPy2-1.90.3)](https://github.com/psychopy/psychopy/releases?after=3.0.0b1) (not 3 or 2020+!). From this repository, you only need the one *.py* file for the specific language, e.g. *LexTALE_en.py* for English. Then you run that file from PsychoPy. (Note: I don't have Chinese version for PsychoPy, only English/German/Dutch.)
+This fork can be hosted independently of the original project:
 
+1. Upload the adapted `index.html` and `main.js` to your fork's repository root.
+2. Keep `stimdata.js`, `styles.css`, `ch_items/`, and the original supporting assets in place.
+3. In the repository, select **Settings → Pages → Build and deployment**.
+4. Choose **Deploy from a branch**, select the repository's publishing branch (`master` or `main`, as applicable) and `/ (root)`, then save.
+5. Use the website link displayed under GitHub Pages settings.
 
-### SUPPORT
+This adaptation is intended for experimenter-supervised administration. Test the full workflow on the actual iPad/browser before collecting data, including a session with an odd ID, a session with an even ID, Chinese image loading, and the saved CSV. Do not assume a download succeeded just because the completion screen appeared.
 
-If you find any problems, [write an email](mailto:lkcsgaspar@gmail.com) or [open a new issue](https://github.com/gasparl/lextale/issues "Issues").
+## Files
 
-(You can also contact me if you need another language implemented, though no promises.)
+- `index.html`: participant/experimenter entry, task instructions, task displays, transition screen, and download-only completion screen.
+- `main.js`: session flow, counterbalancing, responses, scoring, CSV generation, and download behavior.
+- `stimdata.js`: original stimulus definitions and item validity labels.
+- `ch_items/`: Mandarin character images and Chinese instruction graphics.
+- `styles.css`: visual styling retained from the original implementation.
 
+## Original implementation and attribution
 
-### REFERENCES
+Adapted from **Gaspar Lukács' LexTALE(_CH) repository**: https://github.com/gasparl/lextale
 
+The original project includes web-based English, German, Dutch, and Mandarin versions, as well as PsychoPy implementations for some languages. This fork changes the **web administration workflow**; it does not claim to introduce new validated stimulus sets or new normative scoring. For original usage details, code, and support, refer to the [upstream repository](https://github.com/gasparl/lextale). Any original license and attribution requirements continue to apply.
 
-Chan, I. L., & Chang, C. B. (2018). LEXTALE_CH: A quick, character-based proficiency test for Mandarin Chinese. In A. B. Bertolini & M. J. Kaplan (Eds.), *Proceedings of the 42nd Annual Boston University Conference on Language Development*, vol. 1 (pp. 114–130). Somerville, MA: Cascadilla Press. (Material from https://osf.io/qdy4n/)
+### References
 
+Chan, I. L., & Chang, C. B. (2018). LEXTALE_CH: A quick, character-based proficiency test for Mandarin Chinese. In A. B. Bertolini & M. J. Kaplan (Eds.), *Proceedings of the 42nd Annual Boston University Conference on Language Development*, Vol. 1 (pp. 114–130). Somerville, MA: Cascadilla Press. Materials: https://osf.io/qdy4n/
 
-Lemhöfer, K., & Broersma, M. (2012). Introducing LexTALE: A quick and valid Lexical Test for Advanced Learners of English. *Behavior Research Methods, 44*(2), 325–343. https://doi.org/10.3758/s13428-011-0146-0 (Material from http://www.lextale.com/)
+Lemhöfer, K., & Broersma, M. (2012). Introducing LexTALE: A quick and valid Lexical Test for Advanced Learners of English. *Behavior Research Methods, 44*(2), 325–343. https://doi.org/10.3758/s13428-011-0146-0
 
-If you want to cite this code source, please cite the study for which I originally implemented it:
+Lukács, G., Kawai, C., Ansorge, U., & Fekete, A. (2022). Detecting concealed language knowledge via response times. *Applied Linguistics Review*. https://doi.org/10.1515/applirev-2020-0130
 
-Lukács, G., Kawai, C., Ansorge, U., & Fekete, A. (2022). Detecting concealed language knowledge via response times. *Applied Linguistics Review*. Advance online publication. https://doi.org/10.1515/applirev-2020-0130
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3826505.svg)](https://doi.org/10.5281/zenodo.3826505)
+Original implementation DOI: [10.5281/zenodo.3826505](https://doi.org/10.5281/zenodo.3826505).
