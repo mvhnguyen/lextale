@@ -1,189 +1,43 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <link rel="icon" type="png" href="./lgo.png">
-    <title>LexTALE</title>
-    <meta charset="UTF-8">
-    <meta name="google" content="notranslate">
-    <meta name="author" content="Gaspar Lukacs">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="./stimdata.js"></script>
-    <script src="./main.js"></script>
-    <link href="./styles.css" rel="stylesheet" type="text/css">
-    <style>
-      .session-form { max-width:720px; padding:24px; margin:24px auto; text-align:center; }
-      .session-form input { font-size:18px; padding:12px; width:min(90%,360px); box-sizing:border-box; }
-      .session-form button { min-height:48px; padding:10px 20px; margin:8px; cursor:pointer; }
-      .muted { color:#555; }
-      #div_start, #div_between, #div_feed { box-sizing:border-box; }
-      #div_between, #div_feed, #div_end, #div_lex_main, #div_lexch_main, #div_lex_intro { display:none; }
-    </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="google" content="notranslate"><title>English LexTALE + Mandarin LexCH</title>
+<link rel="stylesheet" href="./styles.css">
+<style>
+body {font-family:Arial,'Noto Sans SC',sans-serif; margin:0; color:#172033; background:#f9fafb;}
+.screen {display:none; max-width:900px; margin:24px auto; padding:24px; box-sizing:border-box; background:white; border-radius:12px;}
+.screen.active {display:block;} h1,h2 {margin-top:0;} label {display:block; margin:12px 0 5px;}
+input[type=text] {font-size:18px; width:min(100%,380px); box-sizing:border-box; padding:12px;}
+button {padding:13px 22px; border:0; border-radius:9px; background:#245bad; color:white; font-size:17px; cursor:pointer; margin:8px 6px 8px 0; min-height:48px;}
+button:disabled {background:#999;cursor:not-allowed;} p {line-height:1.65;} .muted {color:#555;}
+#english_word {font-size:clamp(26px,6vw,48px);font-weight:bold;text-align:center;padding:40px 0;overflow-wrap:anywhere;}
+#english_actions {text-align:center;} #english_actions button {min-width:130px;}
+.lexch-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.lexch-row {display:flex;align-items:center;gap:10px;border:1px solid #ccc;border-radius:8px;padding:10px;min-height:40px;font-size:clamp(16px,3vw,22px);cursor:pointer;}
+.lexch-row input {width:22px;height:22px;flex-shrink:0;} .lexch-number {font-size:14px;color:#666;min-width:32px;}
+@media (max-width:550px) {.lexch-grid {grid-template-columns:1fr;} .screen {margin:8px;padding:14px;}}
+</style>
+<script src="./stimdata.js" defer></script>
+<script src="./lexch_data.js" defer></script>
+<script src="./main.js" defer></script>
 </head>
-
 <body class="notranslate">
-
-    <div id="div_start" class="session-form">
-        <h2>LexTALE — English and Mandarin</h2>
-        <p>Both tests will be completed in an automatically assigned order.</p>
-        <form onsubmit="event.preventDefault(); begin_session();">
-            <label for="participant_id">Participant ID (numeric)</label><br>
-            <input id="participant_id" type="text" inputmode="numeric" pattern="[0-9]+" autocomplete="off" required placeholder="e.g., 000"><br><br>
-            <label for="experimenter_name">Experimenter name</label><br>
-            <input id="experimenter_name" type="text" autocomplete="off" required placeholder="Experimenter name"><br><br>
-            <p class="muted">Even ID: English → Mandarin. Odd ID: Mandarin → English.</p>
-            <p id="form_error" role="alert" style="color:#a00"></p>
-            <button class="bttn" type="submit">Begin session</button>
-        </form>
-    </div>
-
-    <div id="div_lex_intro">
-        <br />
-
-        <h2 id="phase_heading"></h2>
-        <div class="texts">
-
-            <div class="lg_en">
-                This test consists of about 60 trials, in each of which you will see a string of letters. Your task is
-                to decide whether this is an existing English word or not. If you think it is an existing English word,
-                you click on "yes",
-                and if
-                you
-                think it is not an existing English word, you click on "no".
-                <br /><br />
-                If you are sure that the word exists, even though you don’t know its exact meaning, you may still
-                respond "yes". But if you are not sure if it is an existing word, you should respond "no".
-                <br /><br />
-                In this experiment, we use British English rather than American English spelling. For example: "realise"
-                instead of "realize"; "colour" instead of "color", and so on. Please don’t let this confuse you. This
-                experiment is not
-                about
-                detecting such subtle spelling differences anyway.
-                <br /><br />
-                You have as much time as you like for each decision. This part of the experiment will take about 5
-                minutes.
-                <br /><br />
-                If everything is clear, you can now start the experiment.
-                <br /><br />
-            </div>
-            <div class="lg_ch" id="ch_firstscreen">
-
-                <img id="intro_ch" src=''
-                    alt="(Warning: Missing image! Displaying HTML characters instead.) 在下一页，您将会看到90个看上去像“汉字”的字，当中只有一些是真正存在的汉字。您需要对每一个字做出判断，如果您认为该字是在中文里存在的(即使您不能够明确地说出该字的意思)或者是您知道该字的话，请勾选左上方的“是汉字”选项 。您无需快速回答每一道问题，但请您根据您的一反应来作答，不用过度的犹豫。请在没有任何外来帮忙的情况下独立完成此测试（不要使用任何汉语词典！）。所有的字皆为简体中文。下方的图片为作答例子。">
-
-                <div class="lg_ch2">
-                    On the next page, you are going to be shown 90 characters that look “Chinese”. Only some of them are
-                    real Chinese characters. You have to decide for each item whether it is a real Chinese character or
-                    not. Please select the
-                    top-left
-                    option <img class="question_class" src='' alt="是汉字 (error note: missing image!)"> if you know the
-                    character or if you believe that the item is a real Chinese character, even if you may not know its
-                    precise meaning. You do not need
-                    to
-                    respond rapidly, but please give your first impression, without any
-                    outside aids (i.e., do not consult a dictionary!). Each character will be presented in Simplified
-                    Chinese. A sample of what the test looks like is shown below.
-                </div>
-
-                <br />
-
-                <div id="example_screen">
-                    <br />
-                    <img id="intro_ch_short1" src='' alt='如果您认为该字为汉字,请勾选左上方"是汉字"的选项。(error note: missing image!)'>
-                    <br />
-                    <div class="lg_ch2">
-                        Please select the top-left option <img class="question_class" src='' alt="是汉字"> if you think the
-                        item is a real Chinese character.
-                    </div>
-                    <br />
-
-                    <ul id='ch_list_examples' class="lists checkbox">
-                    </ul>
-
-                </div>
-                <br />
-
-                <div style="text-align:center">
-                    <img id="intro_ch_bottom" src='' alt='当你认为"家"和"桝"是汉字 (error note: missing image!)'>
-                    <div class="lg_ch2">
-                        (When you think the characters
-                        <img id="corr1" src='' alt='家'>
-                        and
-                        <img id="corr4" src='' alt='桝'>
-                        are real Chinese characters.)
-                    </div>
-                </div>
-
-                <div id="loading_id"><br /><br />Please wait... (loading images...)</div>
-            </div>
-        </div>
-
-        <br /><br />
-        <button id="startbuttn" class="bttn" onclick="lexmain();">
-            <span class="lg_en">OK</span>
-            <span class="lg_ch"> >> </span>
-        </button>
-
-        <br />
-        <br />
-    </div>
-
-    <div id="div_lex_main">
-        <button onclick="lexclick('no');" class="lexresp_buttons lexresp_left">
-            <span class="lg_en">no</span>
-        </button>
-        <button onclick="lexclick('yes');" class="lexresp_buttons lexresp_right">
-            <span class="lg_en">yes</span>
-            
-        </button>
-        <p id="lexstim"></p>
-    </div>
-
-    <div id="div_lexch_main" style="margin: auto;">
-        <div class="lg_ch texts">
-            <img id="intro_ch_short2" src=''
-                alt='如果您认为该字为汉字,请勾选左上方"是汉字"的选项。总共有90个汉字，请在提交答案前对所有汉字作出判断。(error note: missing image!)'>
-            <br />
-            <div class="lg_ch2">
-                Please select the top-left option <img class="question_class" src='' alt="是汉字"> if you think the item is
-                a real Chinese character. There are a total of 90 words, please scroll through and consider all of them
-                before submitting
-                your answers.
-            </div>
-            <br />
-
-            <ul id='ch_list' class="lists checkbox chover">
-            </ul>
-            <hr />
-            <br />
-            <img id="intro_ch_end" src='' alt='总共有90个汉字，请在提交答案前对所有汉字作出判断。'>
-            <br />
-            <div class="lg_ch2">
-                There are a total of 90 words, please scroll through and consider all of them before submitting your
-                answers.
-            </div>
-            <br />
-            <button class="bttn" style="margin-left:70%" onclick="ch_ending();">
-                >>
-            </button>
-            <br />
-        </div>
-    </div>
-
-    <div id="div_between" style="display:none;" class="session-form">
-        <h2 id="between_done"></h2>
-        <p id="between_next"></p>
-        <p>Continue when you are ready for the next language.</p>
-        <button class="bttn" onclick="continue_session();">Continue</button>
-    </div>
-    <div id="div_end" style="display:none;"></div>
-    <div id="div_feed" style="display:none;" class="session-form">
-        <h2>Both tests completed</h2>
-        <p>Results file: <strong id="end_filename"></strong></p>
-        <p>A CSV download has been requested. <strong>Verify that the file has actually been saved</strong> in the iPad Files app or browser Downloads before closing this page.</p>
-        <button class="bttn" onclick="download_results();">Save CSV again</button>
-    </div>
-
-</body>
-
-</html>
+<section class="screen active" id="setup">
+<h1>LexTALE (English) + LexCH (普通话)</h1>
+<p>Both language tests are administered in a fixed participant-specific order.</p>
+<form id="setup_form"><label for="participant_id">Participant ID (digits only)</label><input id="participant_id" type="text" inputmode="numeric" pattern="[0-9]+" required placeholder="e.g. 001">
+<label for="experimenter">Experimenter name</label><input id="experimenter" type="text" required autocomplete="off">
+<p class="muted">Even ID: English → Mandarin. Odd ID: Mandarin → English.</p><button type="submit">Begin session</button></form>
+</section>
+<section class="screen" id="intro"><h2 id="intro_title"></h2><div id="intro_content"></div><button id="start_test">Start test / 开始测试</button></section>
+<section class="screen" id="english"><p id="english_progress" class="muted"></p><div id="english_word" aria-live="polite"></div>
+<div id="english_actions"><button type="button" data-answer="no">No</button><button type="button" data-answer="yes">Yes</button></div></section>
+<section class="screen" id="mandarin"><h2>LexCH — 中文词汇测试</h2><p>请仔细阅读下面的词语。如果您知道该词的意思，或者能够说出一个同义词，请勾选相应的方框。如果您不确定词义，请不要勾选。请独立完成，不要查阅词典。</p>
+<p class="muted">请查看所有144项后再提交。未勾选表示“不认识”。</p><div id="lexch_list" class="lexch-grid"></div>
+<button id="finish_lexch" type="button">提交答案 / Submit answers</button></section>
+<section class="screen" id="between"><h2>First test completed / 第一项测试已完成</h2><p id="next_language"></p><button id="continue_btn">Continue / 继续</button></section>
+<section class="screen" id="complete"><h2>Both tests completed / 两项测试已完成</h2><p>Results file: <strong id="file_name"></strong></p>
+<p>A CSV download has been requested. Please verify that it has been saved in Files / Downloads before closing this page.</p>
+<button id="download_again">Save CSV again / 重新下载</button></section>
+</body></html>
