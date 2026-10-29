@@ -1,6 +1,73 @@
 /*jshint esversion: 6 */
 
-let lexlang = 'en'; // English: 'en', German: 'de', Dutch: 'nl', Chinese: 'ch1', Chinese incl. English: 'ch2'
+let lexlang = 'en';
+let participantId = '';
+let experimenterName = '';
+let languageOrder = [];
+let phaseIndex = 0;
+let allRows = [];
+let phaseSummaries = [];
+let phaseStart = 0;
+let finished = false;
+let phaseCompleted = false;
+let downloadUrl = null;
+const csvColumns = ['participant_id','experimenter','language','order_position','item_number','stimulus','is_real','dummy','response','correct','response_time_ms'];
+const labelLanguage = lang => lang === 'en' ? 'English' : 'Mandarin';
+const csvField = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+const makeCsv = () => '\uFEFF' + [csvColumns.join(','), ...allRows.map(row => csvColumns.map(k => csvField(row[k])).join(','))].join('\r\n') + '\r\n';
+function appendRow(itemNumber, stimulus, isReal, dummy, response, correct, responseMs) {
+    allRows.push({participant_id:participantId, experimenter:experimenterName, language:labelLanguage(lexlang),
+        order_position:phaseIndex + 1, item_number:itemNumber, stimulus:stimulus,
+        is_real:isReal, dummy:dummy, response:response, correct:correct, response_time_ms:responseMs});
+}
+function showOnly(id) {
+    ['div_start','div_lex_intro','div_lex_main','div_lexch_main','div_between','div_end','div_feed'].forEach(x => {
+        document.getElementById(x).style.display = x === id ? 'block' : 'none';
+    });
+}
+function begin_session() {
+    const id = document.getElementById('participant_id').value.trim();
+    const exp = document.getElementById('experimenter_name').value.trim();
+    const error = document.getElementById('form_error');
+    if (!/^\d+$/.test(id)) { error.textContent = 'Enter a numeric participant ID (digits only).'; return; }
+    if (!exp) { error.textContent = 'Enter the experimenter name.'; return; }
+    error.textContent = '';
+    participantId = id;
+    experimenterName = exp;
+    languageOrder = Number(BigInt(id) % 2n) === 0 ? ['en','ch1'] : ['ch1','en'];
+    phaseIndex = 0; allRows = []; phaseSummaries = []; finished = false;
+    select_lg();
+}
+function continue_session() {
+    if (finished || phaseIndex !== 0) return;
+    phaseIndex = 1;
+    select_lg();
+}
+function complete_language(summary) {
+    if (phaseCompleted) return;
+    phaseCompleted = true;
+    phaseSummaries.push(summary);
+    if (phaseIndex === 0) {
+        document.getElementById('between_done').textContent = labelLanguage(lexlang) + ' completed.';
+        document.getElementById('between_next').textContent = 'Next: ' + labelLanguage(languageOrder[1]) + '.';
+        showOnly('div_between');
+    } else {
+        finished = true;
+        full_data = makeCsv();
+        document.getElementById('end_summary_id').textContent = phaseSummaries.join(' | ');
+        document.getElementById('end_filename').textContent = get_filename();
+        document.getElementById('full_data_disp').textContent = full_data;
+        showOnly('div_feed');
+        // A browser may block automatic downloads. A visible Save button is always provided.
+        dl_as_file(get_filename(), full_data);
+    }
+}
+function get_filename() { return 'lextale_' + participantId + '.csv'; }
+function download_results() {
+    if (!finished) return;
+    dl_as_file(get_filename(), full_data);
+}
+
 
 let path_imgs = './ch_items/';
 
@@ -38,55 +105,30 @@ let corr_word = 0;
 let corr_nonword = 0;
 // citP.corr_word + '+' + citP.corr_nonword
 let start_time = 0;
+let lex_item_num = 1;
 let bool_dict = {
     0: 'false',
     1: 'true'
 };
 
 function lexclick(lexrespd) {
+    if (finished || phaseCompleted || lexlang !== 'en' || !window.lexstim_item) return;
     lexstim_item.response_time = Date.now() - start_time;
     lexstim_item.response = lexrespd;
-    console.log(lexstim_item);
-    let corrresp = 'no';
-    if (lexstim_item.wstatus === 1 && lexrespd === 'yes') {
-        corrresp = 'yes';
-        if (lexstim_item.dummy === 0) {
-            corr_word++;
-        }
-    } else if (lexstim_item.wstatus === 0 && lexrespd === 'no') {
-        corrresp = 'yes';
-        if (lexstim_item.dummy === 0) {
-            corr_nonword++;
-        }
+    const isCorrect = (lexstim_item.wstatus === 1 && lexrespd === 'yes') ||
+                      (lexstim_item.wstatus === 0 && lexrespd === 'no');
+    if (isCorrect && lexstim_item.dummy === 0) {
+        if (lexstim_item.wstatus === 1) corr_word++;
+        else corr_nonword++;
     }
-    full_data += [
-        lexstim_item.word,
-        bool_dict[lexstim_item.wstatus],
-        bool_dict[lexstim_item.dummy],
-        lexstim_item.response,
-        corrresp,
-        lexstim_item.response_time
-    ].join('\t') + '\n';
-
+    appendRow(lex_item_num++, lexstim_item.word, lexstim_item.wstatus,
+        lexstim_item.dummy, lexrespd, isCorrect ? 'yes' : 'no', lexstim_item.response_time);
     document.activeElement.blur();
-    if (lextale_items.length > 0) {
-        lex_next();
-    } else {
-        let lex_score = (corr_word / 40 * 100 + corr_nonword / 20 * 100) / 2;
-        document.getElementById('div_lex_main').style.display = 'none';
-        document.getElementById('div_end').style.display = 'block';
-
-        console.log('Correctly identified real words: ' + corr_word +
-            '\nCorrectly identified pseudo words: ' + corr_nonword +
-            '\nLexTALE score: ' + lex_score + '%');
-
-        document.getElementById('end_summary_id').innerHTML =
-            '<span style="font-variant: small-caps;">LexTALE score: <b>' + lex_score.toFixed(2) +
-            '%</span></b><br>Correctly identified real words: <b>' + corr_word +
-            '</b> (out of 40)<br>Correctly identified pseudo words: <b>' + corr_nonword +
-            '</b> (out of 20)' + get_times();
-
-        // you could e.g. here save via PHP with 'store_via_php()'
+    window.lexstim_item = null;
+    if (lextale_items.length > 0) lex_next();
+    else {
+        const score = (corr_word / 40 * 100 + corr_nonword / 20 * 100) / 2;
+        complete_language('English: ' + score.toFixed(2) + '% (words ' + corr_word + '/40, nonwords ' + corr_nonword + '/20)');
     }
 }
 
@@ -106,37 +148,16 @@ function format_ms(milis) {
 }
 
 function ch_ending() {
-    document.getElementById('div_lexch_main').style.display = 'none';
-    document.getElementById('div_end').style.display = 'block';
-    full_data = 'image\tchecked\tcorrect\n';
-    let corr_ch = 0;
-    let corr_nonch = 0;
-    lextale_items.forEach((dct) => {
-        let chekd = document.getElementById(dct.filename + '_cb').checked;
-        full_data += dct.filename + '\t' + chekd + '\t';
-        if (dct.valid == 1 && chekd == true) {
-            corr_ch++;
-            full_data += 'yes';
-        } else if (dct.valid == 0 && chekd == false) {
-            corr_nonch++;
-            full_data += 'yes';
-        } else {
-            full_data += 'no';
-        }
-        full_data += '\n';
+    if (finished || phaseCompleted || lexlang !== 'ch1') return;
+    let corr_ch = 0, corr_nonch = 0;
+    lextale_items.forEach((item, i) => {
+        const checked = document.getElementById(item.filename + '_cb').checked;
+        const correct = (item.valid === 1 && checked) || (item.valid === 0 && !checked);
+        if (correct) { if (item.valid === 1) corr_ch++; else corr_nonch++; }
+        appendRow(i + 1, item.filename, item.valid, 0, checked ? 'yes' : 'no', correct ? 'yes' : 'no', '');
     });
-    let lex_score = (corr_ch / 60 * 100 + corr_nonch / 30 * 100) / 2; // same as "(a + 2 * b) / 120"
-    console.log('Correctly checked real characters: ' + corr_ch +
-        '\nCorrectly not checked pseudo characters: ' + corr_nonch +
-        '\nLexTALE_CH score: ' + lex_score + '%');
-
-    document.getElementById('end_summary_id').innerHTML =
-        '<span style="font-variant: small-caps;">LexTALE_CH score: <b>' + lex_score.toFixed(2) +
-        '%</span></b><br>Correctly <i>checked</i> real characters: <b>' + corr_ch +
-        '</b> (out of 60)<br>Correctly <i>not checked</i> pseudo characters: <b>' + corr_nonch +
-        '</b> (out of 30)' + get_times();
-
-    // you could e.g. here save via PHP with 'store_via_php()'
+    const score = (corr_ch / 60 * 100 + corr_nonch / 30 * 100) / 2;
+    complete_language('Mandarin: ' + score.toFixed(2) + '% (characters ' + corr_ch + '/60, pseudocharacters ' + corr_nonch + '/30)');
 }
 
 function show_feed() {
@@ -172,32 +193,20 @@ function fillsrcs(src, i) {
 }
 
 function select_lg() {
-    let chkd = document.querySelector('input[name="lang"]:checked');
-    if (chkd) {
-        lexlang = chkd.value;
-    }
-    document.getElementById('div_start').style.display = 'none';
-    document.getElementById('div_lex_intro').style.display = 'block';
-    let selects;
-    if (lexlang.length > 2) {
-        document.getElementById('startbuttn').style.marginLeft = '70%';
+    lexlang = languageOrder[phaseIndex];
+    corr_word = 0; corr_nonword = 0; lex_item_num = 1; phaseCompleted = false;
+    document.querySelectorAll('.lg_en, .lg_ch, .lg_ch2').forEach(elem => elem.style.display = 'none');
+    const selected = lexlang === 'en' ? '.lg_en' : '.lg_ch';
+    document.querySelectorAll(selected).forEach(elem => elem.style.display = 'block');
+    document.getElementById('phase_heading').textContent = 'Part ' + (phaseIndex + 1) + ' of 2: ' + labelLanguage(lexlang);
+    showOnly('div_lex_intro');
+    if (lexlang === 'ch1') {
         document.getElementById('startbuttn').style.display = 'none';
         load_all_ch();
-        selects = document.querySelectorAll('.lg_' + lexlang + ', .lg_ch');
     } else {
-        full_data = ['word_shown',
-            'valid',
-            'dummy',
-            'response',
-            'correct',
-            'response_time'
-        ].join('\t') + '\n';
-        window.lextale_items = lex_dict[lexlang];
-        selects = document.querySelectorAll('.lg_' + lexlang);
+        window.lextale_items = lex_dict.en.slice();
+        document.getElementById('startbuttn').style.display = 'inline-block';
     }
-    selects.forEach((elem) => {
-        elem.style.display = 'block';
-    });
     basic_times.intro_shown = Date.now();
 }
 
@@ -244,12 +253,11 @@ function load_all_ch() {
 
 function lexmain() {
     basic_times.test_start = Date.now();
-    document.getElementById('div_lex_intro').style.display = 'none';
-    if (lexlang.length > 2) {
-        document.getElementById('div_lexch_main').style.display = 'block';
+    if (lexlang === 'ch1') {
+        showOnly('div_lexch_main');
         window.scrollTo(0, 0);
     } else {
-        document.getElementById('div_lex_main').style.display = 'block';
+        showOnly('div_lex_main');
         lex_next();
     }
 }
@@ -275,13 +283,16 @@ function copy_to_clip(text) {
 }
 
 function dl_as_file(filename_to_dl, data_to_dl) {
-    let elemx = document.createElement('a');
-    elemx.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(data_to_dl);
-    elemx.download = filename_to_dl;
-    elemx.style.display = 'none';
-    document.body.appendChild(elemx);
-    elemx.click();
-    document.body.removeChild(elemx);
+    const blob = new Blob([data_to_dl], {type:'text/csv;charset=utf-8'});
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename_to_dl;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
 }
 
 

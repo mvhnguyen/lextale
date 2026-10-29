@@ -7,58 +7,40 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <meta name="author" content="Gaspar Lukacs">
-    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="./stimdata.js"></script>
     <script src="./main.js"></script>
     <link href="./styles.css" rel="stylesheet" type="text/css">
+    <style>
+      .session-form { max-width:720px; padding:24px; margin:24px auto; text-align:center; }
+      .session-form input { font-size:18px; padding:12px; width:min(90%,360px); box-sizing:border-box; }
+      .session-form button { min-height:48px; padding:10px 20px; margin:8px; cursor:pointer; }
+      .muted { color:#555; }
+      #div_start, #div_between, #div_feed { box-sizing:border-box; }
+      #div_between, #div_feed, #div_end, #div_lex_main, #div_lexch_main, #div_lex_intro { display:none; }
+    </style>
 </head>
 
 <body class="notranslate">
 
-    <div id="div_start">
-        <br />
-        <div style="display: inline-block; text-align: left;">
-
-            <div style="text-align: center;font-variant: small-caps;">LexTALE: select language to be tested</div>
-            <span style="color:grey">-----------------------------------------------------------------------</span>
-            <br />
-            <br />
-            <input type="radio" id='en_id' name="lang" value="en" checked>
-            <label for="en_id">English</label>
-            <br />
-            <br />
-            <input type="radio" id='de_id' name="lang" value="de">
-            <label for="de_id">German</label>
-            <br />
-            <br />
-            <input type="radio" id='nl_id' name="lang" value="nl">
-            <label for="nl_id">Dutch</label>
-            <br />
-            <br />
-            <input type="radio" id='ch1_id' name="lang" value="ch1">
-            <label for="ch1_id">Mandarin Chinese (Chinese-only intro)</label>
-            <br />
-            <br />
-            <input type="radio" id='ch2_id' name="lang" value="ch2">
-            <label for="ch2_id">Mandarin Chinese incl. English intro</label>
-            <br />
-            <br />
-            <span style="color:grey">-----------------------------------------------------------------------</span>
-        </div>
-        <br />
-        <br />
-        <br />
-        <button class="bttn" onclick="select_lg();">START</button>
-        <br />
-        <br />
-        <hr />
-        <i>For information and references see <a href="https://github.com/gasparl/lextale"
-                target="_blank">https://github.com/gasparl/lextale</a></i>
+    <div id="div_start" class="session-form">
+        <h2>LexTALE — English and Mandarin</h2>
+        <p>Both tests will be completed in an automatically assigned order.</p>
+        <form onsubmit="event.preventDefault(); begin_session();">
+            <label for="participant_id">Participant ID (numeric)</label><br>
+            <input id="participant_id" type="text" inputmode="numeric" pattern="[0-9]+" autocomplete="off" required placeholder="e.g., 000"><br><br>
+            <label for="experimenter_name">Experimenter name</label><br>
+            <input id="experimenter_name" type="text" autocomplete="off" required placeholder="Experimenter name"><br><br>
+            <p class="muted">Even ID: English → Mandarin. Odd ID: Mandarin → English.</p>
+            <p id="form_error" role="alert" style="color:#a00"></p>
+            <button class="bttn" type="submit">Begin session</button>
+        </form>
     </div>
 
     <div id="div_lex_intro">
         <br />
 
+        <h2 id="phase_heading"></h2>
         <div class="texts">
 
             <div class="lg_en">
@@ -82,42 +64,6 @@
                 minutes.
                 <br /><br />
                 If everything is clear, you can now start the experiment.
-                <br /><br />
-            </div>
-            <div class="lg_de">
-                Dieser Test besteht aus ungefähr 60 Durchgängen, in denen Sie jeweils eine Buchstabenreihe sehen. Ihre
-                Aufgabe ist es, zu entscheiden, ob diese Buchstabenreihe ein existierendes deutsches Wort ist oder
-                nicht. Falls sie
-                glauben, dass
-                es
-                ein deutsches Wort ist, klicken Sie auf "ja", andernfalls auf "nein".
-                <br /><br />
-                Sollten Sie sich sicher sein, dass ein Wort existiert, aber seine Bedeutung nicht kennen, können Sie
-                trotzdem mit "ja" antworten. Sind Sie sich aber unsicher, ob das Wort überhaupt im Deutschen existiert,
-                sollten Sie mit
-                "nein"
-                antworten.
-                <br /><br />
-                Sie haben so viel Zeit wie Sie möchten für jede Antwort. Der Test dauert etwa 5 Minuten.
-                <br /><br />
-                Wenn Sie bereit sind, können Sie selbst das Experiment starten.
-                <br /><br />
-            </div>
-            <div class="lg_nl">
-                Deze test bestaat uit ongeveer 60 trials. Je krijgt steeds een letterreeks te zien. Jouw taak is om te
-                beslissen of dit een bestaand Nederlands woord is of niet. Als je denkt dat het een bestaand Nederlands
-                woord is klik je op
-                "ja",
-                als
-                je denkt dat het geen bestaand Nederlands woord is klik je op "nee".
-                <br /><br />
-                Als je er zeker van bent dat het woord bestaat, ook als je niet precies weet wat het betekent, mag je
-                toch met "ja" antwoorden. Maar als je twijfelt of het wel een bestaand woord is, kies dan "nee".
-                <br /><br />
-                Je hebt zoveel tijd als je wilt voor elke beslissing. Dit deel van het experiment duurt ongeveer 5
-                minuten.
-                <br /><br />
-                Als alles duidelijk is kun je het experiment nu starten.
                 <br /><br />
             </div>
             <div class="lg_ch" id="ch_firstscreen">
@@ -174,7 +120,7 @@
 
         <br /><br />
         <button id="startbuttn" class="bttn" onclick="lexmain();">
-            <span class="lg_en lg_de lg_nl">OK</span>
+            <span class="lg_en">OK</span>
             <span class="lg_ch"> >> </span>
         </button>
 
@@ -185,12 +131,10 @@
     <div id="div_lex_main">
         <button onclick="lexclick('no');" class="lexresp_buttons lexresp_left">
             <span class="lg_en">no</span>
-            <span class="lg_de">nein</span>
-            <span class="lg_nl">nee</span>
         </button>
         <button onclick="lexclick('yes');" class="lexresp_buttons lexresp_right">
             <span class="lg_en">yes</span>
-            <span class="lg_de lg_nl">ja</span>
+            
         </button>
         <p id="lexstim"></p>
     </div>
@@ -226,42 +170,21 @@
         </div>
     </div>
 
-    <div id="div_end">
-        <br /><br /><br />
-        <span id='finished_id' style='padding: 1em;' ondblclick="show_feed()">
-            The test is completed.
-        </span>
+    <div id="div_between" style="display:none;" class="session-form">
+        <h2 id="between_done"></h2>
+        <p id="between_next"></p>
+        <p>Continue when you are ready for the next language.</p>
+        <button class="bttn" onclick="continue_session();">Continue</button>
     </div>
-
-    <div class="texts" id="div_feed">
-        <div style="border: 1px solid black;padding:0 1em 0.5em 1em;">
-            <p>
-                <span id="end_summary_id"></span>
-            </p>
-            <hr>
-            <p style="text-align:justify">
-                The full data from the completed test is displayed below. This data can also be downloaded as a
-                <i>txt</i> file using the <b>Download as file</b> button. The <b>Copy to clipboard</b> button may also
-                be used to copy the entire data
-                text to the system clipboard, after which it is possible to paste it into any text editor and save it.
-            </p>
-            <p>
-                <i>For more information, see <a href="https://github.com/gasparl/lextale"
-                        target="_blank">https://github.com/gasparl/lextale</a></i>
-            </p>
-        </div>
-
-        <br>
-        <div style="display: flex;">
-            <div id="full_data_disp"></div>
-            <div>
-                <button onclick="dl_as_file('lextale_results.txt', full_data);">Download&nbsp;as&nbsp;file</button>
-                <button onclick="copy_to_clip(full_data);">Copy&nbsp;to&nbsp;clipboard</button>
-            </div>
-        </div>
-
-        <br>
-
+    <div id="div_end" style="display:none;"></div>
+    <div id="div_feed" style="display:none;" class="session-form">
+        <h2>Both tests completed</h2>
+        <p id="end_summary_id"></p>
+        <p>Results file: <strong id="end_filename"></strong></p>
+        <p>A CSV download has been requested. <strong>Verify that the file has actually been saved</strong> in the iPad Files app or browser Downloads before closing this page.</p>
+        <button class="bttn" onclick="download_results();">Save CSV again</button>
+        <button onclick="copy_to_clip(full_data);">Copy CSV data</button>
+        <details><summary>Preview trial-level data</summary><pre id="full_data_disp" style="white-space:pre;overflow:auto;max-height:300px;text-align:left"></pre></details>
     </div>
 
 </body>
