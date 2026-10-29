@@ -12,7 +12,9 @@ input[type=text] {font-size:18px; width:min(100%,380px); box-sizing:border-box; 
 button {padding:13px 22px; border:0; border-radius:9px; background:#245bad; color:white; font-size:17px; cursor:pointer; margin:8px 6px 8px 0; min-height:48px;}
 button:disabled {background:#999;cursor:not-allowed;} p {line-height:1.65;} .muted {color:#555;}
 #english_word {font-size:clamp(26px,6vw,48px);font-weight:bold;text-align:center;padding:40px 0;overflow-wrap:anywhere;}
-#english_actions {text-align:center;} #english_actions button {min-width:130px;}
+/* Center the English responses beneath the stimulus, independent of legacy CSS. */
+#english_actions {display:flex; justify-content:center; align-items:center; gap:18px; width:100%; margin:0 auto; text-align:center;}
+#english_actions button {float:none !important; position:static !important; display:block; flex:0 1 140px; min-width:110px; max-width:140px; margin:8px 0 !important;}
 .lexch-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .lexch-row {display:flex;align-items:center;gap:10px;border:1px solid #ccc;border-radius:8px;padding:10px;min-height:40px;font-size:clamp(16px,3vw,22px);cursor:pointer;}
 .lexch-row input {width:22px;height:22px;flex-shrink:0;} .lexch-number {font-size:14px;color:#666;min-width:32px;}
